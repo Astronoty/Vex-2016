@@ -2,68 +2,68 @@
 void playMusic()
 {
 	//cuttime
-	playTone(698.46, 49); //F5 half
-	wait10Msec(1);
+	playTone(698.46, 100); //F5 half
+	//wait10Msec();
 
-	playTone(783.99, 24.5); //G5 quarter
-	wait10Msec(.5);
+	playTone(783.99, 50); //G5 quarter
+	//wait10Msec(.5);
 
-	playTone(783.99, 24.5); //G5 quarter
-	wait10Msec(.5);
+	playTone(783.99, 50); //G5 quarter
+	//wait10Msec(.5);
 
-	playTone(659.25, 12.25); //E5 eighth
-	wait10Msec(.25);
+	playTone(659.25, 25); //E5 eighth
+	//wait10Msec(.25);
 
-	playTone(587.33, 12.25);//D5 eighth
-	wait10Msec(.25);
+	playTone(587.33, 25);//D5 eighth
+	//wait10Msec(.25);
 
-	playTone(466.16, 12.25);//A4 eighth sharp
-	wait10Msec(.25);
+	playTone(466.16, 25);//A4 eighth sharp
+	//wait10Msec(.25);
 
-	playTone(493.88, 12.25);//B4 eighth
-	wait10Msec(.25);
+	playTone(493.88, 25);//B4 eighth
+	//wait10Msec(.25);
 
-	playTone(587.33, 12.25);//D5 eighth
-	wait10Msec(.25);
+	playTone(587.33, 25);//D5 eighth
+	//wait10Msec(.25);
 
-	playTone(493.88, 12.25);//B4 eighth
-	wait10Msec(.25);
+	playTone(493.88, 25);//B4 eighth
+	//wait10Msec(.25);
 
-	playTone(659.25, 24.5); //E5 quarter
-	wait10Msec(.5);
+	playTone(659.25, 50); //E5 quarter
+	//wait10Msec(.5);
 
-	playTone(587.33, 12.25);//D5 eighth
-	wait10Msec(.25);
+	playTone(587.33, 25);//D5 eighth
+	//wait10Msec(.25);
 
-	playTone(493.88, 12.25);//B4 eighth
-	wait10Msec(.25);
+	playTone(493.88, 25);//B4 eighth
+	//wait10Msec(.25);
 
-	playTone(440.00, 12.25);//A4 eighth
-	wait10Msec(.25);
+	playTone(440.00, 25);//A4 eighth
+	//wait10Msec(.25);
 
-	playTone(392.00, 12.25);//G4 eighth
-	wait10Msec(.25);
+	playTone(392.00, 25);//G4 eighth
+	//wait10Msec(.25);
 
-	playTone(392.00, 24.5);//G4 quarter
-	wait10Msec(.5);
+	playTone(392.00, 50);//G4 quarter
+	//wait10Msec(.5);
 
-	playTone(392.00, 12.25);//G4 eighth
-	wait10Msec(.25);
+	playTone(392.00, 25);//G4 eighth
+	//wait10Msec(.25);
 
-	playTone(493.88, 24.5);//B4 eighth tied eighth = quarter
-	wait10Msec(.5);
+	playTone(493.88, 50);//B4 eighth tied eighth = quarter
+	//wait10Msec(.5);
 
-	playTone(587.33, 12.25);//D5 eighth
-	wait10Msec(.25);
+	playTone(587.33, 25);//D5 eighth
+	//wait10Msec(.25);
 
-	playTone(659.25, 12.25); //E5 eighth
-	wait10Msec(.25);
+	playTone(659.25, 25); //E5 eighth
+	//wait10Msec(.25);
 
-	playTone(587.33, 12.25);//D5 eighth
-	wait10Msec(.25);
+	playTone(587.33, 25);//D5 eighth
+	//wait10Msec(.25);
 
-	playTone(783.99, 24.5); //G5 quarter
-	wait10Msec(.5);
+	playTone(783.99, 50); //G5 quarter
+	//wait10Msec(.5);
 
 
 
