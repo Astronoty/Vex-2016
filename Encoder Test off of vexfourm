@@ -1,0 +1,30 @@
+
+jpearman 29 Jun 2014 Moderator, ROBOTC Tech Support Rockstar, Los Angeles 8888
+Use SensorValue to get the encoder count, perhaps something like this.
+
+task main()
+{
+    int  value;
+
+    // assume motor is on port 1
+    motor[ port1 ] = 127;
+    // delay while motor accelerates
+    wait1Msec( 500 );
+
+    // clear encoder, enc should be the digital port that the encoder is on
+    SensorValue[ enc ] = 0;
+    
+    // wait for 1 second
+    wait1Msec(1000);
+    value = SensorValue[ enc ];
+
+    // stop motor
+    motor[ port1 ] = 0;
+
+    // send to stdio
+    writeDebugStreamLine("encoder count is %d", value );
+
+    // done
+    while(1)
+        wait1Msec(10);
+}
