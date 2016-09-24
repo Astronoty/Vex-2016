@@ -26,17 +26,31 @@ float velocity() //Velocity in angles per 20 ms - may need to increase time inte
 	return ((float)deltaAngularRotation())/deltaTime();
 }
 
-int powerToTargetSpeed(int power) //Calculate the target speed based on the set power
+float powerToTargetSpeed(int power) //Calculate the target speed based on the set power
 {
-	return power*Ks;
+	return (float)power*Ks; //Constant converts power to angles per 20 ms
+}
+
+int speedToPower(float speed)
+{
+	return (int)(speed/Ks); // Reverse conversion from powerToTargetSpeed
+}
+
+int correctedPIDPowerLevel(int powerLevel)
+{
+	float targetSpeed = powerToTargetSpeed(powerLevel);
+	float actualSpeed = velocity();
+	
+	return speedToPower(targetSpeed-actualSpeed);
+	
 }
 
 task main()
 {
 	while(true)
 	{
-		writeDebugStreamLine("DeltaA: %i", deltaAngularRotation());
-		motor[sanic] = 127;
+		//writeDebugStreamLine("DeltaA: %i", deltaAngularRotation());
+		motor[sanic] = correctePIDPowerLevel(127);
 		wait1Msec(20);
 	}
 }
