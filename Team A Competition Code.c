@@ -1,11 +1,12 @@
 #pragma config(Sensor, dgtl1,  rightEnc,       sensorQuadEncoder)
 #pragma config(Sensor, dgtl3,  leftEnc,        sensorQuadEncoder)
+#pragma config(Sensor, dgtl5,  liftStop,       sensorTouch)
 #pragma config(Motor,  port1,           leftH,         tmotorVex393_HBridge, openLoop)
 #pragma config(Motor,  port2,           leftBottomLift, tmotorVex393HighSpeed_MC29, openLoop, reversed)
-#pragma config(Motor,  port3,           rightBottomLift, tmotorVex393_MC29, openLoop)
+#pragma config(Motor,  port3,           leftDrive,     tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port4,           leftClaw,      tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port5,           rightDrive,    tmotorVex393_MC29, openLoop)
-#pragma config(Motor,  port6,           leftDrive,     tmotorVex393_MC29, openLoop)
+#pragma config(Motor,  port6,           rightBottomLift, tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port7,           rightClaw,     tmotorVex393HighSpeed_MC29, openLoop)
 #pragma config(Motor,  port8,           rightTopLift,  tmotorVex393_MC29, openLoop, reversed)
 #pragma config(Motor,  port9,           leftTopLift,   tmotorVex393_MC29, openLoop)
@@ -22,8 +23,11 @@
 #pragma platform(VEX2)
 
 
+
 // Select Download method as "competition"
 #pragma competitionControl(Competition)
+#pragma autonomousDuration(15)
+#pragma userControlDuration(145)
 
 //Main competition background code...do not modify!
 #include "Vex_Competition_Includes.c"
@@ -48,7 +52,7 @@ void pre_auton()
 	// Set bDisplayCompetitionStatusOnLcd to false if you don't want the LCD
 	// used by the competition include file, for example, you might want
 	// to display your team name on the LCD in this function.
-	// bDisplayCompetitionStatusOnLcd = false;
+	//bDisplayCompetitionStatusOnLcd = false;
 
   // All activities that occur before the competition starts
   // Example: clearing encoders, setting servo positions, ...
@@ -64,14 +68,169 @@ void pre_auton()
 /*  You must modify the code to add your own robot specific commands here.   */
 /*---------------------------------------------------------------------------*/
 
+#define PID_INTEGRAL_LIMIT  50
+#define PID_DRIVE_MAX       127
+#define PID_DRIVE_MIN     (-127)
+
+
+
+void antiGrav()
+{
+		motor[leftTopLift] = -20;
+		motor[leftBottomLift] = -20;
+		motor[rightTopLift] = -20;
+		motor[rightBottomLift] = -20;
+}
+
+void hDrive(int h)
+{
+	motor[leftH] = h;
+	motor[rightH] = h;
+}
+
+static float pidRequestedValueLeft, pidRequestedValueRight;
+int hMotor = 0;//use to strafe
+static float Kp = .55;
+static float Ki = 0;
+static float Kd = 0;
+static float leftDriveScale = 1; //Multiply faster motor by this so speed is equal with slower motor
+static float rightDriveScale = 1;
+static bool pidActive = true;
+
+
+task pidController()
+{
+	//Initialize variables
+	float  pidSensorCurrentValueLeft, pidSensorCurrentValueRight;
+	float  pidErrorLeft, pidErrorRight;
+	float  pidLastErrorLeft, pidLastErrorRight;
+	float  pidIntegralLeft, pidIntegralRight;
+	float  pidDerivativeLeft, pidDerivativeRight;
+	float  pidDriveLeft, pidDriveRight;
+
+	//Clear sensor values
+	SensorValue[rightEnc] = 0;
+	SensorValue[leftEnc] = 0;
+
+	pidLastErrorLeft = 0;
+	pidLastErrorRight = 0;
+	pidIntegralLeft = 0;
+	pidIntegralRight = 0;
+
+	while(true)
+	{
+		antiGrav(); //Keeps lift stationary
+		hDrive(hMotor);
+		//If the pid is set to active
+		if(pidActive)
+		{
+			//Calculate proportional portion
+			pidSensorCurrentValueLeft = SensorValue[leftEnc];
+			pidSensorCurrentValueRight = SensorValue[rightEnc];
+
+			pidErrorLeft = pidSensorCurrentValueLeft - pidRequestedValueLeft;
+			pidErrorRight = pidSensorCurrentValueRight - pidRequestedValueRight;
+			// Calculate integral portion
+			// Add the error to the integral if it is outside the controllable range of values
+			if(abs(pidErrorLeft) < PID_INTEGRAL_LIMIT)
+				pidIntegralLeft = pidIntegralLeft + pidErrorLeft;
+			else
+				pidIntegralLeft = 0;
+
+			if(abs(pidErrorRight) < PID_INTEGRAL_LIMIT)
+				pidIntegralRight = pidIntegralRight + pidErrorRight;
+			else
+				pidIntegralRight = 0;
+
+			// Calculate derivitave portion
+			pidDerivativeLeft = pidErrorLeft - pidLastErrorLeft;
+			pidDerivativeRight = pidErrorRight - pidLastErrorRight;
+
+			pidLastErrorLeft  = pidErrorLeft;
+			pidLastErrorRight = pidErrorRight;
+
+			// calculate drive
+			pidDriveLeft = (Kp * pidErrorLeft) + (Ki * pidIntegralLeft) + (Kd * pidDerivativeLeft);
+			pidDriveRight = (Kp * pidErrorRight) + (Ki * pidIntegralRight) + (Kd * pidDerivativeRight);
+
+			// limit drive
+			if( pidDriveLeft > PID_DRIVE_MAX )
+				pidDriveLeft = PID_DRIVE_MAX;
+			if( pidDriveLeft < PID_DRIVE_MIN )
+				pidDriveLeft = PID_DRIVE_MIN;
+
+			if( pidDriveRight > PID_DRIVE_MAX )
+				pidDriveRight = PID_DRIVE_MAX;
+			if( pidDriveRight < PID_DRIVE_MIN )
+				pidDriveRight = PID_DRIVE_MIN;
+
+
+			// DRIVE BOI DRIVE
+			motor[leftDrive] = (int)((float)pidDriveLeft * (-1.0)*leftDriveScale);
+			motor[rightDrive] = (int)((float)pidDriveRight * rightDriveScale);
+		}
+		else // delete the emails, i mean variables
+		{
+			pidSensorCurrentValueLeft = 0;
+			pidSensorCurrentValueRight = 0;
+			pidErrorLeft = 0;
+			pidErrorRight = 0;
+			pidLastErrorLeft = 0;
+			pidLastErrorRight = 0;
+			pidIntegralLeft = 0;
+			pidIntegralRight = 0;
+			pidDerivativeLeft = 0;
+			pidIntegralRight = 0;
+			pidDriveLeft= 0;
+			pidDriveRight = 0;
+			motor[leftDrive] = 0;
+			motor[rightDrive] = 0;
+		}
+
+	}
+}
+
+
+void drive(int anglesLeft, int anglesRight)
+{
+	SensorValue[leftEnc] = 0;
+	SensorValue[rightEnc] = 0;
+
+	pidRequestedValueLeft = anglesLeft;
+	pidRequestedValueRight = anglesRight;
+
+}
+
+
 task autonomous()
 {
-  // ..........................................................................
-  // Insert user code here.
-  // ..........................................................................
 
-  // Remove this function call once you have "real" code.
-  AutonomousCodePlaceholderForTesting();
+	// 1000 angles equals 2 ft movement (1 square)
+	pidRequestedValueLeft = 0;
+	pidRequestedValueRight = 0;
+
+	motor[leftClaw] = -127;
+	motor[rightClaw] = -127;
+	wait1Msec(500);
+	motor[leftClaw] = 0;
+	motor[rightClaw] = 0;
+
+	motor[leftTopLift] = -127;
+	motor[leftBottomLift] = -127;
+	motor[rightTopLift] = -127;
+	motor[rightBottomLift] = -127;
+
+	wait1Msec(800);
+
+	// start the PID task
+	startTask(pidController);
+	wait1Msec(2000);
+	drive(2400,2400);
+	hMotor = 127;
+	wait1Msec(500);
+	hMotor = 0;
+	wait1Msec(3900);
+	drive(-300,-300);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -97,9 +256,17 @@ task usercontrol()
   	motor[leftH] = h;
 		motor[rightH] = h;
 
-  	motor[leftDrive]  = (int)((float)(vexRT[Ch1] + vexRT[Ch3])*0.6);  // (y + x)/2
+  	motor[leftDrive]  = (int)((float)(vexRT[Ch1] + vexRT[Ch3]));  // (y + x)/2
 		motor[rightDrive] = (vexRT[Ch1] - vexRT[Ch3]);  // (y - x)/2
 
+	if(SensorValue[liftStop])
+  {
+  	motor[leftTopLift] = 0;
+  	motor[leftBottomLift] = 0;
+  	motor[rightTopLift] = 0;
+  	motor[rightBottomLift] = 0;
+  }
+	else
 	if(vexRT[Btn5D] == 1)      	//If button 5d is pressed...
 		{
 			motor[leftTopLift] = 127;
@@ -144,6 +311,12 @@ task usercontrol()
 			motor[leftClaw] = 0;
 		}
 
+		if(vexRT[Btn8L])
+		{
+			motor[rightClaw] = 15;
+			motor[leftClaw] = 15;
+		}
+
 
 
   	wait1Msec(20);
@@ -157,6 +330,6 @@ task usercontrol()
     // ........................................................................
 
     // Remove this function call once you have "real" code.
-    UserControlCodePlaceholderForTesting();
+
   }
  }
